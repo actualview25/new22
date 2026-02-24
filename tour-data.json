@@ -1,6 +1,6 @@
 [
   {
-    "id": "scene-1",
+    "id": "scene1",
     "name": "المشهد الأول",
     "image": "scene-0.jpg",
     "hotspots": [
@@ -8,22 +8,22 @@
         "type": "SCENE",
         "position": { "x": 200, "y": 50, "z": -400 },
         "data": {
-          "targetSceneId": "scene-2",
+          "targetSceneId": "scene2",
           "description": "الانتقال للمشهد الثاني"
         }
       }
     ]
   },
   {
-    "id": "scene-2",
+    "id": "scene2",
     "name": "المشهد الثاني",
     "image": "scene-1.jpg",
     "hotspots": [
       {
         "type": "SCENE",
-        "position": { "x": -200, "y": 30, "z": -420 },
+        "position": { "x": -200, "y": 40, "z": -420 },
         "data": {
-          "targetSceneId": "scene-1",
+          "targetSceneId": "scene1",
           "description": "العودة للمشهد الأول"
         }
       },
@@ -32,7 +32,7 @@
         "position": { "x": 300, "y": 80, "z": -380 },
         "data": {
           "title": "معلومة",
-          "content": "هذه نقطة معلومات داخل الجولة"
+          "content": "هذه نقطة معلومات للعميل"
         }
       }
     ]
