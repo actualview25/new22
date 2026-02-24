@@ -1,42 +1,43 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <title>جولة افتراضية ثلاثية الأبعاد</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>جولة افتراضية</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 
-    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 
 <body>
 
-<div class="info">🏗️ Virtual Tour</div>
 <div id="container"></div>
-<button id="autoRotateBtn">⏸️ إيقاف الدوران</button>
+
+<div class="info">🏗️ جولة افتراضية</div>
+
+<div id="sceneMenu"></div>
 
 <script>
-/* ================== المتغيرات الأساسية ================== */
+/* ========== متغيرات عامة ========== */
 let scene, camera, renderer, controls;
-let sphereMesh;
+let sphere;
 let scenesData = [];
-let currentSceneIndex = 0;
-let autoRotate = true;
-let hotspotElements = [];
+let hotspots = [];
 
-/* ================== تحميل بيانات الجولة ================== */
+/* ========== تحميل البيانات ========== */
 fetch('tour-data.json')
-.then(res => res.json())
+.then(r => r.json())
 .then(data => {
     scenesData = data;
     init();
+    buildMenu();
     loadScene(0);
     animate();
 });
 
-/* ================== التهيئة ================== */
+/* ========== التهيئة ========== */
 function init() {
     scene = new THREE.Scene();
 
@@ -56,117 +57,112 @@ function init() {
     controls.enablePan = false;
     controls.enableZoom = true;
     controls.enableDamping = true;
-    controls.autoRotate = autoRotate;
-    controls.autoRotateSpeed = 0.4;
-
-    document.getElementById('autoRotateBtn').onclick = () => {
-        autoRotate = !autoRotate;
-        controls.autoRotate = autoRotate;
-        document.getElementById('autoRotateBtn').innerText =
-            autoRotate ? '⏸️ إيقاف الدوران' : '▶️ تشغيل الدوران';
-    };
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.6;
 
     window.addEventListener('resize', onResize);
 }
 
-/* ================== تحميل مشهد ================== */
+/* ========== تحميل مشهد ========== */
 function loadScene(index) {
     const data = scenesData[index];
     if (!data) return;
-    currentSceneIndex = index;
 
-    // إزالة الـ sphere السابقة
-    if (sphereMesh) scene.remove(sphereMesh);
+    if (sphere) scene.remove(sphere);
+    hotspots.forEach(h => h.remove());
+    hotspots = [];
 
-    // إزالة الـ hotspots
-    hotspotElements.forEach(h => h.remove());
-    hotspotElements = [];
+    new THREE.TextureLoader().load(data.image, tex => {
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.repeat.x = -1;
 
-    new THREE.TextureLoader().load(data.image, texture => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.repeat.x = -1;
+        sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(500, 128, 128),
+            new THREE.MeshBasicMaterial({
+                map: tex,
+                side: THREE.BackSide
+            })
+        );
+        scene.add(sphere);
 
-        const geometry = new THREE.SphereGeometry(500, 128, 128);
-        const material = new THREE.MeshBasicMaterial({
-            map: texture,
-            side: THREE.BackSide
-        });
+        controls.target.set(0, 0, -1);
+        controls.update();
 
-        sphereMesh = new THREE.Mesh(geometry, material);
-        scene.add(sphereMesh);
-
-        // إنشاء hotspots
         data.hotspots.forEach(createHotspot);
     });
 }
 
-/* ================== إنشاء Hotspot ================== */
-function createHotspot(hotspot) {
+/* ========== إنشاء Hotspot ========== */
+function createHotspot(h) {
     const el = document.createElement('div');
     el.className = 'hotspot';
 
-    el.dataset.x = hotspot.position.x;
-    el.dataset.y = hotspot.position.y;
-    el.dataset.z = hotspot.position.z;
-    el.dataset.type = hotspot.type;
-    el.dataset.data = JSON.stringify(hotspot.data);
+    el.dataset.x = h.position.x;
+    el.dataset.y = h.position.y;
+    el.dataset.z = h.position.z;
+    el.dataset.type = h.type;
+    el.dataset.data = JSON.stringify(h.data);
 
-    if (hotspot.type === 'INFO') {
-        el.style.color = '#ffaa44';
+    if (h.type === 'INFO') {
         el.innerHTML = `
-            <span class="hotspot-icon">ℹ️</span>
-            <div class="hotspot-tooltip">
-                <strong>${hotspot.data.title}</strong>
-                <p>${hotspot.data.content}</p>
+            <span class="icon">ℹ️</span>
+            <div class="tooltip">
+                <strong>${h.data.title}</strong>
+                <p>${h.data.content}</p>
             </div>
         `;
     } else {
-        el.style.color = '#44aaff';
         el.innerHTML = `
-            <span class="hotspot-icon">🚪</span>
-            <div class="hotspot-tooltip">
-                <strong>انتقال</strong>
-                <p>${hotspot.data.description}</p>
-            </div>
+            <span class="icon">🚪</span>
+            <div class="tooltip">${h.data.description}</div>
         `;
         el.onclick = () => {
-            const target = scenesData.findIndex(
-                s => s.id === hotspot.data.targetSceneId
-            );
-            if (target !== -1) loadScene(target);
+            const i = scenesData.findIndex(s => s.id === h.data.targetSceneId);
+            if (i !== -1) loadScene(i);
         };
     }
 
     document.body.appendChild(el);
-    hotspotElements.push(el);
+    hotspots.push(el);
 }
 
-/* ================== التحديث والرسم ================== */
+/* ========== القائمة الجانبية ========== */
+function buildMenu() {
+    const menu = document.getElementById('sceneMenu');
+    scenesData.forEach((s, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = s.name || `مشهد ${i + 1}`;
+        btn.onclick = () => loadScene(i);
+        menu.appendChild(btn);
+    });
+}
+
+/* ========== التحديث ========== */
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
 
-    hotspotElements.forEach(el => {
-        const x = parseFloat(el.dataset.x);
-        const y = parseFloat(el.dataset.y);
-        const z = parseFloat(el.dataset.z);
+    hotspots.forEach(el => {
+        const v = new THREE.Vector3(
+            el.dataset.x,
+            el.dataset.y,
+            el.dataset.z
+        ).project(camera);
 
-        const vector = new THREE.Vector3(x, y, z).project(camera);
-
-        if (vector.z > 1) {
+        if (v.z < -1 || v.z > 1) {
             el.style.display = 'none';
             return;
         }
 
         el.style.display = 'block';
-        el.style.left = (vector.x * 0.5 + 0.5) * window.innerWidth + 'px';
-        el.style.top = (-vector.y * 0.5 + 0.5) * window.innerHeight + 'px';
+        el.style.left = (v.x * 0.5 + 0.5) * window.innerWidth + 'px';
+        el.style.top  = (-v.y * 0.5 + 0.5) * window.innerHeight + 'px';
     });
 
     renderer.render(scene, camera);
 }
 
-/* ================== Resize ================== */
+/* ========== Resize ========== */
 function onResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
