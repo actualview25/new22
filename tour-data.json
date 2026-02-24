@@ -1,42 +1,38 @@
 [
   {
-    "id": "scene-1771886701703-0.5667947042565167",
-    "name": "c",
+    "id": "scene-1",
+    "name": "المشهد الأول",
     "image": "scene-0.jpg",
-    "paths": [],
-    "hotspots": []
-  },
-  {
-    "id": "scene-1771957929215-0.9732617638448635",
-    "name": "ص",
-    "image": "scene-1.jpg",
-    "paths": [],
     "hotspots": [
       {
-        "id": "hotspot-1771957956270-0.5972256070187482",
         "type": "SCENE",
-        "position": {
-          "x": 230.5119332621677,
-          "y": 139.16995796898553,
-          "z": -421.1516658295996
-        },
+        "position": { "x": 200, "y": 50, "z": -400 },
         "data": {
-          "targetSceneId": "scene-1771886701703-0.5667947042565167",
-          "targetSceneName": "c",
-          "description": "2"
+          "targetSceneId": "scene-2",
+          "description": "الانتقال للمشهد الثاني"
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene-2",
+    "name": "المشهد الثاني",
+    "image": "scene-1.jpg",
+    "hotspots": [
+      {
+        "type": "SCENE",
+        "position": { "x": -200, "y": 30, "z": -420 },
+        "data": {
+          "targetSceneId": "scene-1",
+          "description": "العودة للمشهد الأول"
         }
       },
       {
-        "id": "hotspot-1771957983866-0.8912123079072006",
         "type": "INFO",
-        "position": {
-          "x": 313.0328605924041,
-          "y": 31.877753361818588,
-          "z": -388.41880015418275
-        },
+        "position": { "x": 300, "y": 80, "z": -380 },
         "data": {
-          "title": "ققق",
-          "content": "قق"
+          "title": "معلومة",
+          "content": "هذه نقطة معلومات داخل الجولة"
         }
       }
     ]
